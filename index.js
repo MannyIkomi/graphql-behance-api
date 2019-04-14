@@ -1,22 +1,6 @@
-const express = require('express')
-const GraphQLHTTP = require('express-graphql')
-// const env = require('./config')
-const schema = require('./schema')
+const { injectEnvironmentVariables } = require('./config')
+injectEnvironmentVariables({ path: './config/.env', debug: true })
 
-const app = express()
+const { startApp } = require('./app.js')
 
-app.use(
-  '/graphql',
-  GraphQLHTTP({
-    schema,
-    graphiql: true //process.env === 'development' ? true : false
-  })
-)
-
-// console.log(`Environment`, env)
-const PORT = process.env.PORT || 4000
-const NODE_ENV = process.env.NODE_ENV
-app.listen(
-  PORT,
-  console.log(`Server listening on port ${PORT}, Environment: ${NODE_ENV}`)
-)
+startApp()
