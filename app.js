@@ -1,7 +1,6 @@
 const express = require('express')
 const GraphQLHTTP = require('express-graphql')
-
-const schema = require('./schema')
+const schema = require('./graphql/schema')
 
 function startApp() {
   const app = express()
