@@ -5,8 +5,11 @@ const {
   GraphQLSchema,
   GraphQLString,
   GraphQLInt,
-  GraphQLUnionType
+  GraphQLUnionType,
+  GraphQLNonNull
 } = require('graphql')
+// const { GraphQLJSON, GraphQLJSONObject } = require('graphql-type-json')
+
 const axios = require('axios')
 
 const BE_USER_ID = process.env.BE_USER_ID
@@ -18,17 +21,17 @@ const BE_API_KEY = process.env.BE_API_KEY
 const ProjectCoversType = new GraphQLObjectType({
   name: 'Cover',
   fields: () => ({
-    original: { type: GraphQLString }
-    // '404': { type: GraphQLString },
-    // '808': { type: GraphQLString }
+    original: { type: GraphQLString },
+    size_404: { type: GraphQLString, resolve: covers => covers['404'] },
+    size_808: { type: GraphQLString, resolve: covers => covers['808'] }
   })
 })
 
-const ImageSizesType = new GraphQLObjectType({
+const ImageModuleSizes = new GraphQLObjectType({
   name: 'ImageSize',
   fields: () => ({
     original: { type: GraphQLString },
-    // '1400': { type: GraphQLString },
+    size_1400: { type: GraphQLString, resolve: sizes => sizes['1400'] },
     disp: { type: GraphQLString }
   })
 })
@@ -38,7 +41,7 @@ const ImageModule = new GraphQLObjectType({
   fields: () => ({
     project_id: { type: GraphQLInt },
     type: { type: GraphQLString },
-    sizes: { type: ImageSizesType }
+    sizes: { type: ImageModuleSizes }
   })
 })
 
@@ -70,17 +73,39 @@ const ProjectModulesType = new GraphQLUnionType({
 const ProjectType = new GraphQLObjectType({
   name: `Project`,
   fields: () => ({
-    id: { type: GraphQLID },
-    name: { type: GraphQLString },
+    id: { type: GraphQLNonNull(GraphQLID) },
+    name: {
+      type: GraphQLString,
+      resolve: project => project.name
+    },
     created_on: { type: GraphQLInt }, //epoch date
     modified_on: { type: GraphQLInt }, //epoch date
     published_on: { type: GraphQLInt }, //epoch date
     url: { type: GraphQLString },
     slug: { type: GraphQLString },
     fields: { type: GraphQLList(GraphQLString) }, //as in creative field categories
-    // covers
-    // modules
+
+    covers: { type: ProjectCoversType },
     modules: { type: GraphQLList(ProjectModulesType) }
+  })
+})
+
+const PortfolioType = new GraphQLObjectType({
+  name: 'Portfolio',
+  fields: () => ({
+    projects: {
+      type: GraphQLList(ProjectType),
+      resolve: (parent, args) => {
+        console.log(parent)
+        // const projects = axios
+        //   .get(
+        //     `https://api.behance.net/v2/users/${BE_USER_ID}/projects?api_key=${BE_API_KEY}`
+        //   )
+        //   .then(response => response.data.projects)
+        console.log('PORTFOLIO', projects)
+        return projects
+      }
+    }
   })
 })
 
@@ -90,7 +115,7 @@ const RootQuery = new GraphQLObjectType({
     project: {
       type: ProjectType,
       args: {
-        id: { type: GraphQLInt }
+        id: { type: GraphQLNonNull(GraphQLInt) }
       },
       resolve: (parent, args) =>
         axios
@@ -100,6 +125,9 @@ const RootQuery = new GraphQLObjectType({
             }/projects?api_key=${BE_API_KEY}`
           )
           .then(response => response.data.project)
+    },
+    portfolio: {
+      type: PortfolioType
     }
   })
 })
