@@ -5,11 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "dev": "NODE_ENV=development nodemon"
+    "dev": "NODE_ENV=development nodemon index.js"
   },
   "author": "Manny Ikomi",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.18.0",
+    "dotenv": "^7.0.0",
     "express": "^4.16.4",
     "express-graphql": "^0.7.1",
     "graphql": "^14.2.1"
