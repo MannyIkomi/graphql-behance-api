@@ -1,0 +1,20 @@
+{
+  "name": "portfolio-api-graphql",
+  "version": "1.0.0",
+  "description": "API Wrapper for Behance using GraphQL",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "dev": "NODE_ENV=development nodemon"
+  },
+  "author": "Manny Ikomi",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.4",
+    "express-graphql": "^0.7.1",
+    "graphql": "^14.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.11"
+  }
+}
