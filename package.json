@@ -5,20 +5,22 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "dev": "NODE_ENV=development nodemon index.js",
-    "start": "NODE_ENV=production nodemon index.js"
+    "dev": "NODE_ENV=development PORT=3001 nodemon index.js"
   },
   "author": "Manny Ikomi",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.18.0",
+    "cors": "^2.8.5",
     "dotenv": "^7.0.0",
     "express": "^4.16.4",
     "express-graphql": "^0.7.1",
     "graphql": "^14.2.1",
-    "graphql-type-json": "^0.3.0"
+    "graphql-type-json": "^0.3.0",
+    "helmet": "^3.16.0"
   },
   "devDependencies": {
-    "nodemon": "^1.18.11"
+    "nodemon": "^1.18.11",
+    "supersniff": "^2.1.0"
   }
 }

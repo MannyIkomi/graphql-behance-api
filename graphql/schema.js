@@ -24,64 +24,50 @@ const Project = new GraphQLObjectType({
       type: GraphQLString,
       resolve: project => project.name
     },
+    description: { type: GraphQLString },
     created_on: { type: GraphQLInt }, //epoch date
     modified_on: { type: GraphQLInt }, //epoch date
     published_on: { type: GraphQLInt }, //epoch date
     url: { type: GraphQLString },
     slug: { type: GraphQLString },
     fields: { type: GraphQLList(GraphQLString) }, //as in creative field categories
-
+    tags: { type: GraphQLList(GraphQLString) },
     covers: { type: ProjectCovers },
     modules: { type: GraphQLList(ProjectModules) }
   })
 })
 
-const Portfolio = new GraphQLObjectType({
-  name: 'Portfolio',
-  fields: () => ({
-    projects: {
-      type: GraphQLList(Project),
-      resolve: projects => {
-        const ids = projects.map(project => project.id)
-        return Promise.all(
-          ids.map(id =>
-            axios
-              .get(
-                `https://api.behance.net/v2/projects/${id}/projects?api_key=${BE_API_KEY}`
-              )
-              .then(response => response.data.project)
-          )
-        )
-      }
-    }
-  })
-})
+// const sniff = require('supersniff')
 
 const RootQuery = new GraphQLObjectType({
   name: 'RootQuery',
   fields: () => ({
-    project: {
-      type: Project,
+    projects: {
+      type: GraphQLList(Project),
       args: {
-        id: { type: GraphQLNonNull(GraphQLInt) }
+        id: { type: GraphQLInt },
+        slug: { type: GraphQLString }
       },
-      resolve: (root, args) =>
-        axios
-          .get(
-            `https://api.behance.net/v2/projects/${
-              args.id
-            }/projects?api_key=${BE_API_KEY}`
-          )
-          .then(response => response.data.project)
-    },
-    portfolio: {
-      type: Portfolio,
-      resolve: () =>
-        axios
+      resolve: () => {
+        const portfolio = axios
           .get(
             `https://api.behance.net/v2/users/${BE_USER_ID}/projects?api_key=${BE_API_KEY}`
           )
+
           .then(response => response.data.projects)
+
+        return portfolio.then(portfolio => {
+          return portfolio.map(project =>
+            axios
+              .get(
+                `https://api.behance.net/v2/projects/${
+                  project.id
+                }/projects?api_key=${BE_API_KEY}`
+              )
+              .then(response => response.data.project)
+          )
+        })
+      }
     }
   })
 })

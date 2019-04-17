@@ -1,6 +1,6 @@
 const { injectEnvironmentVariables } = require('./config')
 injectEnvironmentVariables({ path: './config/.env', debug: true })
 
-const { startApp } = require('./app.js')
+const { start } = require('./app.js')
 
-startApp()
+start()
