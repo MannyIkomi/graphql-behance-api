@@ -9,8 +9,8 @@ const ProjectCovers = new GraphQLObjectType({
   name: 'Cover',
   fields: () => ({
     original: { type: GraphQLString },
-    size_404: { type: GraphQLString, resolve: covers => covers['404'] },
-    size_808: { type: GraphQLString, resolve: covers => covers['808'] }
+    _404: { type: GraphQLString, resolve: covers => covers['404'] },
+    _808: { type: GraphQLString, resolve: covers => covers['808'] }
   })
 })
 
@@ -18,7 +18,7 @@ const ImageModuleSizes = new GraphQLObjectType({
   name: 'ImageSize',
   fields: () => ({
     original: { type: GraphQLString },
-    size_1400: { type: GraphQLString, resolve: sizes => sizes['1400'] },
+    _1400: { type: GraphQLString, resolve: sizes => sizes['1400'] },
     disp: { type: GraphQLString }
   })
 })

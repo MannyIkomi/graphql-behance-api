@@ -37,7 +37,7 @@ const Project = new GraphQLObjectType({
   })
 })
 
-// const sniff = require('supersniff')
+const sniff = require('supersniff')
 
 const RootQuery = new GraphQLObjectType({
   name: 'RootQuery',
@@ -48,7 +48,7 @@ const RootQuery = new GraphQLObjectType({
         id: { type: GraphQLInt },
         slug: { type: GraphQLString }
       },
-      resolve: () => {
+      resolve: (root, args) => {
         const portfolio = axios
           .get(
             `https://api.behance.net/v2/users/${BE_USER_ID}/projects?api_key=${BE_API_KEY}`
@@ -56,17 +56,22 @@ const RootQuery = new GraphQLObjectType({
 
           .then(response => response.data.projects)
 
-        return portfolio.then(portfolio => {
-          return portfolio.map(project =>
-            axios
-              .get(
-                `https://api.behance.net/v2/projects/${
-                  project.id
-                }/projects?api_key=${BE_API_KEY}`
-              )
-              .then(response => response.data.project)
-          )
-        })
+        if (args.id) {
+          return [getProjectById(args.id)]
+        } else if (args.slug) {
+          // portfolio.then(portfolio =>
+          //   portfolio
+          //     .map(project => getProjectById(project.id))
+          //     .then(sniff)
+          //     .then(portfolio =>
+          //       portfolio.filter(project => project.slug === args.slug)
+          //     )
+          // )
+          // return []
+        }
+        return portfolio.then(portfolio =>
+          portfolio.map(project => getProjectById(project.id))
+        )
       }
     }
   })
@@ -75,3 +80,11 @@ const RootQuery = new GraphQLObjectType({
 module.exports = new GraphQLSchema({
   query: RootQuery
 })
+
+function getProjectById(id) {
+  return axios
+    .get(
+      `https://api.behance.net/v2/projects/${id}/projects?api_key=${BE_API_KEY}`
+    )
+    .then(response => response.data.project)
+}
