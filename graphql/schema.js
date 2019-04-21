@@ -21,15 +21,16 @@ const Project = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLNonNull(GraphQLID) },
     name: {
-      type: GraphQLString,
-      resolve: project => project.name
+      type: GraphQLString
     },
     description: { type: GraphQLString },
     created_on: { type: GraphQLInt }, //epoch date
     modified_on: { type: GraphQLInt }, //epoch date
     published_on: { type: GraphQLInt }, //epoch date
     url: { type: GraphQLString },
-    slug: { type: GraphQLString },
+    slug: {
+      type: GraphQLString
+    },
     fields: { type: GraphQLList(GraphQLString) }, //as in creative field categories
     tags: { type: GraphQLList(GraphQLString) },
     covers: { type: ProjectCovers },
@@ -49,29 +50,37 @@ const RootQuery = new GraphQLObjectType({
         slug: { type: GraphQLString }
       },
       resolve: (root, args) => {
-        const portfolio = axios
+        // base api call GETs projects[] with id's for the root query to manipulate
+        const myProjects = axios
           .get(
             `https://api.behance.net/v2/users/${BE_USER_ID}/projects?api_key=${BE_API_KEY}`
           )
-
           .then(response => response.data.projects)
 
         if (args.id) {
+          // GET a single project{} and wraps into an array[]
           return [getProjectById(args.id)]
+          //
         } else if (args.slug) {
-          // portfolio.then(portfolio =>
-          //   portfolio
-          //     .map(project => getProjectById(project.id))
-          //     .then(sniff)
-          //     .then(portfolio =>
-          //       portfolio.filter(project => project.slug === args.slug)
-          //     )
-          // )
-          // return []
+          // GET all projects[]
+          return myProjects.then(projects =>
+            // map each projects[] to GET modules with an id
+            Promise.all(
+              projects.map(project => getProjectById(project.id))
+            ).then(portfolio =>
+              // filters all projects for case insensitive match to the slug
+              portfolio.filter(
+                project =>
+                  project.slug.toUpperCase() === args.slug.toUpperCase()
+              )
+            )
+          )
+        } else {
+          // all projects and modules
+          return myProjects.then(projects =>
+            projects.map(project => getProjectById(project.id))
+          )
         }
-        return portfolio.then(portfolio =>
-          portfolio.map(project => getProjectById(project.id))
-        )
       }
     }
   })
@@ -82,6 +91,7 @@ module.exports = new GraphQLSchema({
 })
 
 function getProjectById(id) {
+  // RETURNS A PROMISE
   return axios
     .get(
       `https://api.behance.net/v2/projects/${id}/projects?api_key=${BE_API_KEY}`
