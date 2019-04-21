@@ -62,19 +62,15 @@ const RootQuery = new GraphQLObjectType({
           return [getProjectById(args.id)]
           //
         } else if (args.slug) {
-          // GET all projects[]
-          return myProjects.then(projects =>
-            // map each projects[] to GET modules with an id
-            Promise.all(
-              projects.map(project => getProjectById(project.id))
-            ).then(portfolio =>
-              // filters all projects for case insensitive match to the slug
-              portfolio.filter(
+          return myProjects
+            .then(projects =>
+              projects.filter(
                 project =>
                   project.slug.toUpperCase() === args.slug.toUpperCase()
               )
             )
-          )
+            .then(sniff)
+            .then(matchedProject => [getProjectById(matchedProject[0].id)])
         } else {
           // all projects and modules
           return myProjects.then(projects =>
