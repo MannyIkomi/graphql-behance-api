@@ -17,30 +17,23 @@ function start() {
     app.use(bodyParser.json())
 
     app.use('*', (req, res, next) => {
-      console.log(
-        'Request Recevied: ' +
-          '\nMETHOD: ' +
-          req.method +
-          '\nBODY: ' +
-          JSON.stringify(req.body)
-      )
+      console.log(`Request Recieved:\nMETHOD: ${req.method}`)
       next()
     })
   }
-
-  app.post(
-    '/graphql',
-    GraphQLHTTP({
-      schema
-    })
-  )
 
   app.use(
     '/graphql',
     GraphQLHTTP({
       schema,
-      graphiql: NODE_ENV === 'development' ? true : false
-    })
+      graphiql: NODE_ENV === 'development' ? true : false,
+      context: {
+        cache: app.locals.cache
+      }
+    }),
+    (req, res, next) => {
+      console.log(`GraphQL Accessed`)
+    }
   )
 
   app.listen(

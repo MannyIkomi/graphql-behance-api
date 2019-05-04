@@ -69,10 +69,10 @@ const RootQuery = new GraphQLObjectType({
                   project.slug.toUpperCase() === args.slug.toUpperCase()
               )
             )
-            .then(sniff)
             .then(matchedProject => [getProjectById(matchedProject[0].id)])
         } else {
           // all projects and modules
+
           return myProjects.then(projects =>
             projects.map(project => getProjectById(project.id))
           )
