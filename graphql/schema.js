@@ -31,7 +31,7 @@ const Project = new GraphQLObjectType({
     slug: {
       type: GraphQLString
     },
-    fields: { type: GraphQLList(GraphQLString) }, //as in creative field categories
+    fields: { type: GraphQLList(GraphQLString) }, //creative field categories
     tags: { type: GraphQLList(GraphQLString) },
     covers: { type: ProjectCovers },
     modules: { type: GraphQLList(ProjectModules) }
@@ -52,15 +52,18 @@ const RootQuery = new GraphQLObjectType({
       resolve: (root, args, context) => {
         const { redis } = context
         // base api call GETs projects[] with id's for the root query to manipulate
-        const myProjects = axios
-          .get(
-            `https://api.behance.net/v2/users/${BE_USER_ID}/projects?api_key=${BE_API_KEY}`
-          )
-          .then(response => response.data.projects)
+        // check cache for projects
 
-        myProjects.then(projects =>
-          projects.forEach(project => redis.set(project.slug, project))
-        )
+        // get all projects + their modules
+        const myProjects = getProjects(BE_USER_ID, BE_API_KEY)
+
+        // set cache + expiration with redis
+        myProjects.then(projects => {
+          redis.set('projects', JSON.stringify(projects))
+          projects.forEach(project =>
+            redis.set(project.slug, JSON.stringify(project))
+          )
+        })
 
         if (args.id) {
           // GET a single project{} and wraps into an array[]
@@ -80,9 +83,7 @@ const RootQuery = new GraphQLObjectType({
           )
         } else {
           // all projects and modules
-          return myProjects.then(projects =>
-            projects.map(project => getProjectById(project.id))
-          )
+          return getProjectsWithModules(myProjects)
         }
       }
     }
@@ -92,6 +93,20 @@ const RootQuery = new GraphQLObjectType({
 module.exports = new GraphQLSchema({
   query: RootQuery
 })
+
+function getProjects(BE_USER_ID, BE_API_KEY) {
+  return axios
+    .get(
+      `https://api.behance.net/v2/users/${BE_USER_ID}/projects?api_key=${BE_API_KEY}`
+    )
+    .then(response => response.data.projects)
+}
+
+function getProjectsWithModules(projects) {
+  return projects.then(projects =>
+    projects.map(project => getProjectById(project.id))
+  )
+}
 
 function getProjectById(id) {
   // RETURNS A PROMISE
