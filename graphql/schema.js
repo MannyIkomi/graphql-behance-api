@@ -49,7 +49,8 @@ const RootQuery = new GraphQLObjectType({
         id: { type: GraphQLInt },
         slug: { type: GraphQLString }
       },
-      resolve: (root, args) => {
+      resolve: (root, args, context) => {
+        const { redis } = context
         // base api call GETs projects[] with id's for the root query to manipulate
         const myProjects = axios
           .get(
@@ -57,20 +58,26 @@ const RootQuery = new GraphQLObjectType({
           )
           .then(response => response.data.projects)
 
+        myProjects.then(projects =>
+          projects.forEach(project => redis.set(project.slug, project))
+        )
+
         if (args.id) {
           // GET a single project{} and wraps into an array[]
           return [getProjectById(args.id)]
           //
         } else if (args.slug) {
-          return myProjects
-            .then(projects =>
-              projects.filter(
-                project =>
-                  project.slug.toUpperCase() === args.slug.toUpperCase()
+          return (
+            myProjects
+              .then(projects =>
+                projects.filter(
+                  project =>
+                    project.slug.toUpperCase() === args.slug.toUpperCase()
+                )
               )
-            )
-            .then(sniff)
-            .then(matchedProject => [getProjectById(matchedProject[0].id)])
+              // .then(sniff)
+              .then(matchedProject => [getProjectById(matchedProject[0].id)])
+          )
         } else {
           // all projects and modules
           return myProjects.then(projects =>
