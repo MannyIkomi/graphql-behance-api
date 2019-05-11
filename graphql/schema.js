@@ -64,19 +64,30 @@ const RootQuery = new GraphQLObjectType({
         function setCache(untilExpiration = 30) {
           // Side Effects
           // call behance, set cache, return all projects in portfolio
+
           console.log('SETTING CACHE')
 
           const myProjects = behance.getPortfolio()
           // https://github.com/luin/ioredis#pipelining
           myProjects.then(projects => {
             // save entire JSON blob into redis
-            redis.set('projects', JSON.stringify(projects))
-            redis.expire('projects', untilExpiration)
+            // redis.set('projects', JSON.stringify(projects))
+            // redis.expire('projects', untilExpiration)
+            redis
+              .pipeline()
+              .set('projects', JSON.stringify(projects))
+              .expire('projects', untilExpiration)
+              .exec()
 
             projects.forEach(project => {
               // save each project JSON blob into redis seperately
-              redis.set(project.slug, JSON.stringify(project))
-              redis.expire(project.slug, untilExpiration)
+              // redis.set(project.slug, JSON.stringify(project))
+              // redis.expire(project.slug, untilExpiration)
+              redis
+                .pipeline()
+                .set(project.slug, JSON.stringify(project))
+                .expire(project.slug, untilExpiration)
+                .exec()
             })
           })
 
