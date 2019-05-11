@@ -16,6 +16,7 @@ function start() {
 
   app.use(cors())
   app.use(helmet())
+  app.use(bodyParser.json())
 
   if (NODE_ENV === 'development') {
     redis.on('connect', () => {
@@ -26,12 +27,12 @@ function start() {
       )
     })
 
-    app.use(bodyParser.json())
-
     app.use('*', (req, res, next) => {
       console.log('Query Recevied: ' + JSON.stringify(req.body, null, 2))
       next()
     })
+
+    console.log('BEHANCE', [process.env.BE_USER_ID, process.env.BE_API_KEY])
   }
 
   // app.post(
@@ -46,7 +47,13 @@ function start() {
     GraphQLHTTP({
       schema,
       graphiql: NODE_ENV === 'development' ? true : false,
-      context: { redis }
+      context: { redis },
+      customFormatErrorFn: error => ({
+        message: error.message,
+        locations: error.locations,
+        stack: error.stack ? error.stack.split('\n') : [],
+        path: error.path
+      })
     })
   )
 

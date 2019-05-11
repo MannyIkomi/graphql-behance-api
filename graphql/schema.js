@@ -12,9 +12,7 @@ const {
 
 const axios = require('axios')
 const { ProjectCovers, ProjectModules } = require('./types')
-
-const BE_USER_ID = process.env.BE_USER_ID
-const BE_API_KEY = process.env.BE_API_KEY
+const Behance = require('./behance')
 
 const Project = new GraphQLObjectType({
   name: `Project`,
@@ -46,44 +44,70 @@ const RootQuery = new GraphQLObjectType({
     projects: {
       type: GraphQLList(Project),
       args: {
-        id: { type: GraphQLInt },
+        // id: { type: GraphQLInt },
         slug: { type: GraphQLString }
       },
-      resolve: (root, args, context) => {
+      resolve: async (root, args, context) => {
+        const behance = Behance(process.env.BE_USER_ID, process.env.BE_API_KEY)
         const { redis } = context
-        // base api call GETs projects[] with id's for the root query to manipulate
+
         // check cache for projects
+        const isCached = await redis
+          .get('projects')
+          // .then(sniff)
+          .then(projects => {
+            console.log('CHECKING CACHE')
+            // console.log(JSON.parse(projects))
+            return JSON.parse(projects)
+          })
 
-        // get all projects + their modules
-        const myProjects = getProjects(BE_USER_ID, BE_API_KEY)
+        function setCache(expires = 30) {
+          // Side Effects
+          console.log('SETTING CACHE')
 
-        // set cache + expiration with redis
-        myProjects.then(projects => {
-          redis.set('projects', JSON.stringify(projects))
-          projects.forEach(project =>
-            redis.set(project.slug, JSON.stringify(project))
-          )
-        })
+          const myProjects = behance.getPortfolio()
 
-        if (args.id) {
-          // GET a single project{} and wraps into an array[]
-          return [getProjectById(args.id)]
-          //
-        } else if (args.slug) {
+          myProjects.then(projects => {
+            redis.set('projects', JSON.stringify(projects))
+            projects.forEach(project =>
+              redis.set(project.slug, JSON.stringify(project))
+            )
+          })
+
+          return myProjects
+        }
+
+        const cache = await (isCached ? isCached : setCache())
+
+        if (args.slug) {
+          const fromCache =
+            isCached &&
+            redis.get(args.slug).then(project => [JSON.parse(project)])
+
           return (
-            myProjects
-              .then(projects =>
-                projects.filter(
-                  project =>
-                    project.slug.toUpperCase() === args.slug.toUpperCase()
-                )
+            fromCache ||
+            setCache().then(projects =>
+              projects.filter(
+                project =>
+                  project.slug.toUpperCase() === args.slug.toUpperCase()
               )
-              // .then(sniff)
-              .then(matchedProject => [getProjectById(matchedProject[0].id)])
+            )
           )
+          // return (
+          //   isCached
+          //     .then(projects =>
+          //       projects.filter(
+          //         project =>
+          //           project.slug.toUpperCase() === args.slug.toUpperCase()
+          //       )
+          //     )
+          //     // .then(sniff)
+          //     .then(matchedProject => [getProjectById(matchedProject[0].id)])
+          // )
         } else {
           // all projects and modules
-          return getProjectsWithModules(myProjects)
+          console.log(cache)
+          return cache
         }
       }
     }
@@ -93,26 +117,3 @@ const RootQuery = new GraphQLObjectType({
 module.exports = new GraphQLSchema({
   query: RootQuery
 })
-
-function getProjects(BE_USER_ID, BE_API_KEY) {
-  return axios
-    .get(
-      `https://api.behance.net/v2/users/${BE_USER_ID}/projects?api_key=${BE_API_KEY}`
-    )
-    .then(response => response.data.projects)
-}
-
-function getProjectsWithModules(projects) {
-  return projects.then(projects =>
-    projects.map(project => getProjectById(project.id))
-  )
-}
-
-function getProjectById(id) {
-  // RETURNS A PROMISE
-  return axios
-    .get(
-      `https://api.behance.net/v2/projects/${id}/projects?api_key=${BE_API_KEY}`
-    )
-    .then(response => response.data.project)
-}
