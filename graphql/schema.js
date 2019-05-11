@@ -51,33 +51,37 @@ const RootQuery = new GraphQLObjectType({
         const behance = Behance(process.env.BE_USER_ID, process.env.BE_API_KEY)
         const { redis } = context
 
-        // check cache for projects
+        // check redis for projects cache in memory
         const isCached = await redis
           .get('projects')
-          // .then(sniff)
+
           .then(projects => {
             console.log('CHECKING CACHE')
-            // console.log(JSON.parse(projects))
+
             return JSON.parse(projects)
           })
 
-        function setCache(expires = 30) {
+        function setCache(untilExpiration = 30) {
           // Side Effects
+          // call behance, set cache, return all projects in portfolio
           console.log('SETTING CACHE')
 
           const myProjects = behance.getPortfolio()
-
+          // https://github.com/luin/ioredis#pipelining
           myProjects.then(projects => {
+            // save entire JSON blob into redis
             redis.set('projects', JSON.stringify(projects))
-            projects.forEach(project =>
+            redis.expire('projects', untilExpiration)
+
+            projects.forEach(project => {
+              // save each project JSON blob into redis seperately
               redis.set(project.slug, JSON.stringify(project))
-            )
+              redis.expire(project.slug, untilExpiration)
+            })
           })
 
-          return myProjects
+          return myProjects // PROMISE
         }
-
-        const cache = await (isCached ? isCached : setCache())
 
         if (args.slug) {
           const fromCache =
@@ -93,20 +97,10 @@ const RootQuery = new GraphQLObjectType({
               )
             )
           )
-          // return (
-          //   isCached
-          //     .then(projects =>
-          //       projects.filter(
-          //         project =>
-          //           project.slug.toUpperCase() === args.slug.toUpperCase()
-          //       )
-          //     )
-          //     // .then(sniff)
-          //     .then(matchedProject => [getProjectById(matchedProject[0].id)])
-          // )
         } else {
           // all projects and modules
-          console.log(cache)
+          const cache = await (isCached ? isCached : setCache())
+
           return cache
         }
       }
