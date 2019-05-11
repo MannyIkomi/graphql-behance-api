@@ -58,7 +58,6 @@ const RootQuery = new GraphQLObjectType({
 
           .then(projects => {
             console.log('CHECKING CACHE')
-
             return JSON.parse(projects)
           })
 
@@ -73,8 +72,7 @@ const RootQuery = new GraphQLObjectType({
           // https://github.com/luin/ioredis#pipelining
           myProjects.then(projects => {
             // save entire JSON blob into redis
-            // redis.set('projects', JSON.stringify(projects))
-            // redis.expire('projects', untilExpiration)
+
             redis
               .pipeline()
               .set('projects', JSON.stringify(projects))
@@ -83,8 +81,7 @@ const RootQuery = new GraphQLObjectType({
 
             projects.forEach(project => {
               // save each project JSON blob into redis seperately
-              // redis.set(project.slug, JSON.stringify(project))
-              // redis.expire(project.slug, untilExpiration)
+
               redis
                 .pipeline()
                 .set(project.slug.toLowerCase(), JSON.stringify(project))
