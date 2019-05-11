@@ -1,6 +1,6 @@
 # portfolio-api-graphql
 
-### REDIS API
+### REDIS API OBJECT
 
 ```javascript
 Redis {

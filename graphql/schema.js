@@ -27,7 +27,8 @@ const Project = new GraphQLObjectType({
     published_on: { type: GraphQLInt }, //epoch date
     url: { type: GraphQLString },
     slug: {
-      type: GraphQLString
+      type: GraphQLString,
+      resolve: parent => parent.slug.toLowerCase()
     },
     fields: { type: GraphQLList(GraphQLString) }, //creative field categories
     tags: { type: GraphQLList(GraphQLString) },
@@ -61,7 +62,8 @@ const RootQuery = new GraphQLObjectType({
             return JSON.parse(projects)
           })
 
-        function setCache(untilExpiration = 30) {
+        function setCache(untilExpiration = 300) {
+          // 5mins * per60seconds = 300 seconds
           // Side Effects
           // call behance, set cache, return all projects in portfolio
 
@@ -85,8 +87,8 @@ const RootQuery = new GraphQLObjectType({
               // redis.expire(project.slug, untilExpiration)
               redis
                 .pipeline()
-                .set(project.slug, JSON.stringify(project))
-                .expire(project.slug, untilExpiration)
+                .set(project.slug.toLowerCase(), JSON.stringify(project))
+                .expire(project.slug.toLowerCase(), untilExpiration)
                 .exec()
             })
           })
@@ -95,6 +97,7 @@ const RootQuery = new GraphQLObjectType({
         }
 
         if (args.slug) {
+          console.log(args.slug)
           const fromCache =
             isCached &&
             redis.get(args.slug).then(project => [JSON.parse(project)])

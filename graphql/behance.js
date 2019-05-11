@@ -25,11 +25,11 @@ function Behance(userId, apiKey) {
       .then(response => response.data.projects)
   }
 
-  function getProjectsWithModules(projects = [{}]) {
-    return projects.then(projects =>
-      projects.map(project => getProjectById(project.id))
-    )
-  }
+  // function getProjectsWithModules(projects = [{}]) {
+  //   return projects.then(projects =>
+  //     projects.map(project => getProjectById(project.id))
+  //   )
+  // }
 
   function getProjectById(id, behanceApiKey) {
     // RETURNS A PROMISE
@@ -44,7 +44,7 @@ function Behance(userId, apiKey) {
   return {
     getPortfolio,
     getProjectsList,
-    getProjectsWithModules,
+
     getProjectById
   }
 }

@@ -32,30 +32,26 @@ function start() {
       next()
     })
 
-    console.log('BEHANCE', [process.env.BE_USER_ID, process.env.BE_API_KEY])
+    // console.log('BEHANCE', [process.env.BE_USER_ID, process.env.BE_API_KEY])
   }
-
+  const mountGraphql = GraphQLHTTP({
+    schema,
+    graphiql: NODE_ENV === 'development' ? true : false,
+    context: { redis },
+    customFormatErrorFn: error => ({
+      message: error.message,
+      locations: error.locations,
+      stack: error.stack ? error.stack.split('\n') : [],
+      path: error.path
+    })
+  })
   // app.post(
   //   '/graphql',
   //   GraphQLHTTP({
   //     schema
   //   })
   // )
-
-  app.use(
-    '/graphql',
-    GraphQLHTTP({
-      schema,
-      graphiql: NODE_ENV === 'development' ? true : false,
-      context: { redis },
-      customFormatErrorFn: error => ({
-        message: error.message,
-        locations: error.locations,
-        stack: error.stack ? error.stack.split('\n') : [],
-        path: error.path
-      })
-    })
-  )
+  app.use('/graphql', mountGraphql)
 
   app.listen(
     PORT,
