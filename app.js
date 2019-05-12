@@ -50,8 +50,9 @@ function start() {
   //     schema
   //   })
   // )
+  app.get('/graphql', mountGraphql)
   app.post('/graphql', mountGraphql)
-  app.use('/graphql', mountGraphql)
+  // app.use('/graphql', mountGraphql)
 
   app.listen(
     PORT,
