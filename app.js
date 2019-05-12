@@ -49,6 +49,7 @@ function start() {
   //     schema
   //   })
   // )
+  app.post('/graphql', mountGraphql)
   app.use('/graphql', mountGraphql)
 
   app.listen(
