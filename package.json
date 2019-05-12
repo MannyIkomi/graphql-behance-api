@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "API Wrapper for Behance using GraphQL",
   "main": "index.js",
+  "engines": {
+    "node": "10.8.0"
+  },
   "scripts": {
     "test": "jest",
     "dev": "NODE_ENV=development PORT=3001 nodemon index.js",
