@@ -4,12 +4,11 @@ const Redis = require('ioredis')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const helmet = require('helmet')
-
 const schema = require('./graphql/schema')
 
 function start() {
   const app = express()
-  const redis = new Redis()
+  const redis = new Redis(process.env.REDISCLOUD_URL || 6379)
 
   const PORT = parseInt(process.env.PORT, 10)
   const NODE_ENV = process.env.NODE_ENV
@@ -31,9 +30,8 @@ function start() {
       console.log('Query Recevied: ' + JSON.stringify(req.body, null, 2))
       next()
     })
-
-    // console.log('BEHANCE', [process.env.BE_USER_ID, process.env.BE_API_KEY])
   }
+
   const mountGraphql = GraphQLHTTP({
     schema,
     graphiql: NODE_ENV === 'development' ? true : false,
