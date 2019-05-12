@@ -8,8 +8,8 @@
   },
   "scripts": {
     "test": "jest",
-    "dev": "NODE_ENV=development PORT=3001 nodemon index.js",
-    "start": "node index.js"
+    "start": "NODE_ENV=production node index.js",
+    "dev": "NODE_ENV=development PORT=3001 nodemon index.js"
   },
   "author": "Manny Ikomi",
   "license": "ISC",
