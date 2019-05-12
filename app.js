@@ -34,7 +34,8 @@ function start() {
 
   const mountGraphql = GraphQLHTTP({
     schema,
-    graphiql: NODE_ENV === 'development' ? true : false,
+    // graphiql: NODE_ENV === 'development' ? true : false,
+    graphiql: true,
     context: { redis },
     customFormatErrorFn: error => ({
       message: error.message,
