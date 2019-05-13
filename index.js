@@ -1,5 +1,5 @@
 const { configEnvironmentVar } = require('./config')
-configEnvironmentVar({ path: '/.env', silent: 'true' })
+configEnvironmentVar({ silent: 'true' })
 
 const { start } = require('./app.js')
 start()
