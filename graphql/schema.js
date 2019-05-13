@@ -37,8 +37,6 @@ const Project = new GraphQLObjectType({
   })
 })
 
-const sniff = require('supersniff')
-
 const RootQuery = new GraphQLObjectType({
   name: 'RootQuery',
   fields: () => ({
