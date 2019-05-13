@@ -1,12 +1,12 @@
 const dotenv = require('dotenv')
 
-function injectEnvironmentVariables(options = {}) {
+function configEnvironmentVar(options = {}) {
   const env = dotenv.config(options)
   if (env.error) {
-    throw env.error
+    console.error(env.error)
   }
 }
 
 module.exports = {
-  injectEnvironmentVariables
+  configEnvironmentVar
 }
