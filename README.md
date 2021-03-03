@@ -1,6 +1,6 @@
 # GraphQL Behance API Wrapper
 
-Custom backend Node.js GraphQL server with Redis cache layer
+My custom solution to Behance's API rate limit, a Node.js GraphQL server with Redis cache layer.
 
 ## Tools & Technology
 
